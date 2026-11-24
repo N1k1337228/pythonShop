@@ -29,7 +29,7 @@
 
 ### 3. Подключение базы данных
 В файле `app/db/base.py` объявлен базовый класс `Base` (наследник `DeclarativeBase`).
-В файле `app/db/session.py` создан асинхронный движок `create_async_engine` и фабрика сессий `async_sessionmaker`. В качестве СУБД используется SQLite через драйвер `aiosqlite`. Также была установлена библиотека `greenlet`, необходимая для асинхронной работы SQLAlchemy.
+В файле `app/db/session.py`  создан асинхронный движок `create_async_engine` и фабрика сессий `async_sessionmaker`. В качестве СУБД используется SQLite через драйвер `aiosqlite`. Также была установлена библиотека `greenlet`, необходимая для асинхронной работы SQLAlchemy.
 
 ### 4. Модель базы данных
 В файле `app/models/product.py` описана модель `Product` для таблицы `products` со следующими колонками:
