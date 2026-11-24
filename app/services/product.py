@@ -1,35 +1,33 @@
-from datetime import datetime
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductUpdate
 
-class InMemoryProductService:
-    def __init__(self) -> None:
-        # Вместо базы данных используем словарь
-        self._items: dict[int, dict] = {}
-        self._next_id = 1
+class ProductService:
+    def __init__(self, db: AsyncSession) -> None:
+        self.db = db
 
-    def list(self) -> list[dict]:
-        return list(self._items.values())
+    async def list(self) -> list[Product]:
+        result = await self.db.execute(select(Product))
+        return list(result.scalars().all())
 
-    def get(self, product_id: int) -> dict | None:
-        return self._items.get(product_id)
+    async def get(self, product_id: int) -> Product | None:
+        return await self.db.get(Product, product_id)
 
-    def create(self, data: ProductCreate) -> dict:
-        product = {
-            "id": self._next_id,
-            "created_at": datetime.utcnow(),
-            **data.model_dump(),
-        }
-        self._items[self._next_id] = product
-        self._next_id += 1
+    async def create(self, data: ProductCreate) -> Product:
+        product = Product(**data.model_dump())
+        self.db.add(product)
+        await self.db.commit()
+        await self.db.refresh(product)
         return product
 
-    def update(self, product_id: int, data: ProductUpdate) -> dict | None:
-        product = self._items.get(product_id)
-        if product is None:
-            return None
+    async def update(self, product: Product, data: ProductUpdate) -> Product:
         for key, value in data.model_dump(exclude_unset=True).items():
-            product[key] = value
+            setattr(product, key, value)
+        await self.db.commit()
+        await self.db.refresh(product)
         return product
 
-    def delete(self, product_id: int) -> bool:
-        return self._items.pop(product_id, None) is not None
+    async def delete(self, product: Product) -> None:
+        await self.db.delete(product)
+        await self.db.commit()
