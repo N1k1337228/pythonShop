@@ -2,9 +2,12 @@ from collections.abc import AsyncGenerator
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.session import AsyncSessionLocal
 from app.core.security import decode_token
 from app.models.user import User
+from app.repositories.product import ProductRepository
+from app.services.product import ProductService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -31,3 +34,11 @@ def require_role(*roles: str):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
         return user
     return checker
+
+# --- Функции для ЛР8 (Архитектура) ---
+
+def get_product_repo(db: AsyncSession = Depends(get_db)) -> ProductRepository:
+    return ProductRepository(db)
+
+def get_product_service(repo: ProductRepository = Depends(get_product_repo)) -> ProductService:
+    return ProductService(repo)
