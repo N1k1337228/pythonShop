@@ -1,15 +1,27 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Literal
 
 from app.api.deps import get_db
+from app.schemas.common import Page
 from app.schemas.product import ProductCreate, ProductRead, ProductUpdate
 from app.services.product import ProductService
 
 router = APIRouter(prefix="/products", tags=["products"])
 
-@router.get("", response_model=list[ProductRead])
-async def list_products(db: AsyncSession = Depends(get_db)):
-    return await ProductService(db).list()
+@router.get("", response_model=Page[ProductRead])
+async def list_products(
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=100),
+    category_id: int | None = None,
+    status: str | None = None,
+    search: str | None = None,
+    sort_by: str = "created_at",
+    order: Literal["asc", "desc"] = "desc",
+    db: AsyncSession = Depends(get_db),
+):
+    items, total = await ProductService(db).paginate(page, size, category_id, status, search, sort_by, order)
+    return Page.create(items=items, total=total, page=page, size=size)
 
 @router.get("/{product_id}", response_model=ProductRead)
 async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):

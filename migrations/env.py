@@ -5,7 +5,10 @@ from alembic import context
 # Импортируем наши настройки и модели
 from app.core.config import settings
 from app.db.base import Base
-import app.models.product  # Важно! Импортируем модели, чтобы Alembic их увидел
+
+# Важно: импортируем ВСЕ модели, чтобы Alembic их видел (добавили Category)
+import app.models.category
+import app.models.product
 
 config = context.config
 if config.config_file_name is not None:
@@ -23,6 +26,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        render_as_batch=True,  # <-- Добавили для поддержки SQLite
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -35,7 +39,9 @@ def run_migrations_online() -> None:
     )
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            render_as_batch=True  # <-- Добавили для поддержки SQLite
         )
         with context.begin_transaction():
             context.run_migrations()
