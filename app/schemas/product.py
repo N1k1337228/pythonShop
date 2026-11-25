@@ -6,6 +6,7 @@ class ProductBase(BaseModel):
     description: str | None = None
     price: float = Field(gt=0, description="Цена должна быть больше 0")
     stock: int = Field(ge=0, default=0)
+    status: str = "active"  # <-- НОВОЕ ПОЛЕ
 
 class ProductCreate(ProductBase):
     pass
@@ -15,6 +16,7 @@ class ProductUpdate(BaseModel):
     description: str | None = None
     price: float | None = Field(default=None, gt=0)
     stock: int | None = Field(default=None, ge=0)
+    status: str | None = None
 
 class ProductRead(ProductBase):
     id: int

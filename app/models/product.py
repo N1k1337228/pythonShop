@@ -11,4 +11,5 @@ class Product(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     price: Mapped[float] = mapped_column(Float)
     stock: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(20), default="active")  # <-- НОВОЕ ПОЛЕ
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
