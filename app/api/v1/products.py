@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Literal
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_role
 from app.schemas.common import Page
 from app.schemas.product import ProductCreate, ProductRead, ProductUpdate
 from app.services.product import ProductService
@@ -31,11 +31,20 @@ async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
     return product
 
 @router.post("", response_model=ProductRead, status_code=status.HTTP_201_CREATED)
-async def create_product(data: ProductCreate, db: AsyncSession = Depends(get_db)):
+async def create_product(
+    data: ProductCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(require_role("admin", "manager")) # ЗАЩИТА
+):
     return await ProductService(db).create(data)
 
 @router.put("/{product_id}", response_model=ProductRead)
-async def update_product(product_id: int, data: ProductUpdate, db: AsyncSession = Depends(get_db)):
+async def update_product(
+    product_id: int,
+    data: ProductUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(require_role("admin", "manager")) # ЗАЩИТА
+):
     service = ProductService(db)
     product = await service.get(product_id)
     if product is None:
@@ -43,7 +52,11 @@ async def update_product(product_id: int, data: ProductUpdate, db: AsyncSession 
     return await service.update(product, data)
 
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_product(
+    product_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(require_role("admin", "manager")) # ЗАЩИТА
+):
     service = ProductService(db)
     product = await service.get(product_id)
     if product is None:

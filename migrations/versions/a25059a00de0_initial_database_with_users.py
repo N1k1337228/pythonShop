@@ -1,8 +1,8 @@
-"""initial database with categories
+"""initial database with users
 
-Revision ID: 375c385e1d1a
+Revision ID: a25059a00de0
 Revises: 
-Create Date: 2026-11-25 10:56:48.093576
+Create Date: 2026-11-25 11:21:57.336290
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '375c385e1d1a'
+revision: str = 'a25059a00de0'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -28,6 +28,18 @@ def upgrade() -> None:
     )
     with op.batch_alter_table('categories', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_categories_name'), ['name'], unique=True)
+
+    op.create_table('users',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('email', sa.String(length=255), nullable=False),
+    sa.Column('hashed_password', sa.String(length=255), nullable=False),
+    sa.Column('full_name', sa.String(length=255), nullable=True),
+    sa.Column('role', sa.String(length=20), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('users', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_users_email'), ['email'], unique=True)
 
     op.create_table('products',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -55,6 +67,10 @@ def downgrade() -> None:
         batch_op.drop_index(batch_op.f('ix_products_title'))
 
     op.drop_table('products')
+    with op.batch_alter_table('users', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_users_email'))
+
+    op.drop_table('users')
     with op.batch_alter_table('categories', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_categories_name'))
 
